@@ -1,9 +1,7 @@
 #include <curand_kernel.h>
 #include "Extract_CUDA_kernel.h"
 
-#define CELLS cells
-#define cube_CELLS cube_cells
-#define TO_COODRS(x,y,z) ((x) + (y)*CELLS + (z)*CELLS*CELLS)
+#define TO_COODRS(x,y,z) ((x) + (y)*ca_dim.x + (z)*ca_dim.x*ca_dim.y)
 #define TO_CUBE_COODRS(x,y,z) ((x) + (y)*cube_CELLS + (z)*cube_CELLS*cube_CELLS)
 #define CUBE_CELLS_CNT cube_CELLS*cube_CELLS*cube_CELLS
 #define THICKNESS thickness
@@ -38,7 +36,7 @@ __constant__ int indexs[2][3][8] = {{{2, 0, 3, 1, 6, 4, 7, 5},
 
 #define RETURN_CUBE_TO_MEM(ind)    cube[coords[(ind)]] = rotate_element[(ind)];
 
-__global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int * blockIdz
+__global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int blockIdz, dim3 ca_dim
 #ifdef _DEBUG
 , unsigned int * dbg
 #endif
@@ -57,7 +55,7 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
 
     i =  (blockIdx.x * blockDim.x + threadIdx.x);
     j =  (blockIdx.y * blockDim.y + threadIdx.y);
-    k = ((*blockIdz) * blockDim.z + threadIdx.z);
+    k = (blockIdz * blockDim.z + threadIdx.z);
     
     curandState local_rnd_state = rands[TO_CUBE_COODRS(i,j,k)];
     
@@ -103,7 +101,7 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
     RETURN_CUBE_TO_MEM(7)
 }
 
-__global__ void clear_cells(char * cube)
+__global__ void clear_cells(char * cube, dim3 ca_dim, dim3 ca_dim)
 {
     const int cells = 2 * blockDim.x * gridDim.x+1;
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
@@ -138,7 +136,7 @@ __global__ void clear_cells(char * cube)
     cube[TO_COODRS(i+1, CELLS - 1, j+1)] = 0;
 }
 
-__global__ void clear_top(char * cube)
+__global__ void clear_top(char * cube, dim3 ca_dim)
 {
     const int cells = 2 * blockDim.x * gridDim.x+1;
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
@@ -150,7 +148,7 @@ __global__ void clear_top(char * cube)
     cube[TO_COODRS(i+1, j+1 , 0)] = 1;
 }
 
-__global__ void clear_floor(char * cube)
+__global__ void clear_floor(char * cube, dim3 ca_dim)
 {
     const int cells = 2 * blockDim.x * gridDim.x+1;
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
@@ -167,7 +165,8 @@ __global__ void clear_floor(char * cube)
 }
 
 
-__global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int * blockIdz, const unsigned int thick, const unsigned int height
+__global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int * blockIdz, const unsigned int thick, 
+const unsigned int height, dim3 ca_dim
 #ifdef _DEBUG
 , unsigned int * debug_sum
 #endif
@@ -213,9 +212,9 @@ __global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int *
         part_cnt[blockIdx.x + blockIdx.y * gridDim.x] = res;
     }
 */
-    #ifdef _DEBUG
-        atomicAdd(&(debug_sum[thd]), cnt);
-    #endif
+#ifdef _DEBUG
+    atomicAdd(&(debug_sum[thd]), cnt);
+#endif
 
 }
 

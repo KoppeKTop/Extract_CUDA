@@ -288,8 +288,8 @@ int main(int argc, char **argv){
 #ifdef _DEBUG
     unsigned int *debug_gpu, *dbg_cpu;
     unsigned int dbg_sum;
-        CUDA_SAFE_CALL( cudaMalloc((void **)&debug_gpu, 512*sizeof(int)) );
-        dbg_cpu = (unsigned int *)malloc(512*sizeof(unsigned int));
+    CUDA_SAFE_CALL( cudaMalloc((void **)&debug_gpu, 512*sizeof(int)) );
+    dbg_cpu = (unsigned int *)malloc(512*sizeof(unsigned int));
     for (i = 0; i < 512; i++) dbg_cpu[i] = 0;
 #endif
 
@@ -309,9 +309,9 @@ int main(int argc, char **argv){
     myPrint("Let's try some iterations...\n", params.print_to);
     myPrint((s=itoa((drug))), params.print_to);
     free(s);
-        CUDA_SAFE_CALL( cudaThreadSynchronize() );
-        CUT_SAFE_CALL( cutResetTimer(hTimer) );
-        CUT_SAFE_CALL( cutResetTimer(hSumTimer) );
+    CUDA_SAFE_CALL( cudaThreadSynchronize() );
+    CUT_SAFE_CALL( cutResetTimer(hTimer) );
+    CUT_SAFE_CALL( cutResetTimer(hSumTimer) );
     CUT_SAFE_CALL( cutStartTimer(hSumTimer) );
 
     for (i=1; i <= params.max_iter; i++)
@@ -319,9 +319,9 @@ int main(int argc, char **argv){
     #ifdef _SPEED_TEST
         CUT_SAFE_CALL( cutStartTimer(hTimer) );
     #endif
-            RandomGPU<<<32, 128>>>(d_Rand, N_PER_RNG);
-            CUT_CHECK_ERROR("RandomGPU() execution failed\n");
-            CUDA_SAFE_CALL( cudaThreadSynchronize() );    
+        RandomGPU<<<32, 128>>>(d_Rand, N_PER_RNG);
+        CUT_CHECK_ERROR("RandomGPU() execution failed\n");
+        CUDA_SAFE_CALL( cudaThreadSynchronize() );    
     #ifdef _SPEED_TEST
         cutStopTimer(hTimer);
         printf("Random time: %f ms\n\n", cutGetTimerValue(hTimer));
@@ -336,17 +336,17 @@ int main(int argc, char **argv){
         CUT_SAFE_CALL( cutStartTimer(hTimer) );
     #endif
 
-            for (j = 0; j < grid_dim; j++)
-            {
-                CUDA_SAFE_CALL( cudaMemcpy(z_gpu, &j, sizeof(int), cudaMemcpyHostToDevice));
-                #ifdef _DEBUG
-                ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 0, d_Rand, z_gpu, debug_gpu);
+        for (j = 0; j < grid_dim; j++)
+        {
+            CUDA_SAFE_CALL( cudaMemcpy(z_gpu, &j, sizeof(int), cudaMemcpyHostToDevice));
+        #ifdef _DEBUG
+            ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 0, d_Rand, z_gpu, debug_gpu);
         #else
-                ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 0, d_Rand, z_gpu);
+            ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 0, d_Rand, z_gpu);
         #endif
-                CUT_CHECK_ERROR("Even step execution failed\n");
-                CUDA_SAFE_CALL( cudaThreadSynchronize() );
-            }
+            CUT_CHECK_ERROR("Even step execution failed\n");
+            CUDA_SAFE_CALL( cudaThreadSynchronize() );
+        }
 
     #ifdef _SPEED_TEST
         cutStopTimer(hTimer);
@@ -367,9 +367,9 @@ int main(int argc, char **argv){
         CUT_SAFE_CALL( cutStartTimer(hTimer) );
     #endif
 
-            RandomGPU<<<32, 128>>>(d_Rand, N_PER_RNG);
-            CUT_CHECK_ERROR("RandomGPU() execution failed\n");
-            CUDA_SAFE_CALL( cudaThreadSynchronize() );
+        RandomGPU<<<32, 128>>>(d_Rand, N_PER_RNG);
+        CUT_CHECK_ERROR("RandomGPU() execution failed\n");
+        CUDA_SAFE_CALL( cudaThreadSynchronize() );
 
     #ifdef _SPEED_TEST
         cutStopTimer(hTimer);
@@ -377,25 +377,26 @@ int main(int argc, char **argv){
         cutResetTimer(hTimer);
     #endif
 
-        #ifdef _DEBUG
+    #ifdef _DEBUG
         CUDA_SAFE_CALL( cudaMemcpy(debug_gpu, dbg_cpu, sizeof(int), cudaMemcpyHostToDevice));
-        #endif
+    #endif
 
     #ifdef _SPEED_TEST
         CUT_SAFE_CALL( cutStartTimer(hTimer) );
     #endif
 
         for (j = 0; j < grid_dim; j++)
-            {
+        {
                 CUDA_SAFE_CALL( cudaMemcpy(z_gpu, &j, sizeof(int), cudaMemcpyHostToDevice));
-        #ifdef _DEBUG
-                ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 1, d_Rand, z_gpu, debug_gpu);
-        #else
-                ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 1, d_Rand, z_gpu);
-        #endif
-                CUT_CHECK_ERROR("Odd step execution failed\n");
-                CUDA_SAFE_CALL( cudaThreadSynchronize() );
-            }
+    #ifdef _DEBUG
+            ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 1, d_Rand, z_gpu, debug_gpu);
+    #else        сгеКуыуеЕшьук(рЕшьук)ж
+
+            ca_step<<<dimGrid, dimBlock>>>(cube_gpu, 1, d_Rand, z_gpu);
+    #endif
+            CUT_CHECK_ERROR("Odd step execution failed\n");
+            CUDA_SAFE_CALL( cudaThreadSynchronize() );
+        }
 
     #ifdef _SPEED_TEST
         cutStopTimer(hTimer);
@@ -404,14 +405,14 @@ int main(int argc, char **argv){
     #endif
 
 
-        #ifdef _DEBUG
+    #ifdef _DEBUG
         CUDA_SAFE_CALL( cudaMemcpy(dbg_cpu, debug_gpu, sizeof(int), cudaMemcpyDeviceToHost));
         if (dbg_cpu[0] != 0)
         {
             printf("Borders crossed %i times!!!\n", dbg_cpu[0]);
             dbg_cpu[0] = 0;
         }
-        #endif
+    #endif
 
     #ifdef _SPEED_TEST
         CUT_SAFE_CALL( cutStartTimer(hTimer) );
@@ -420,9 +421,9 @@ int main(int argc, char **argv){
         //for (j = 0; j < grid_dim; j++)
             //{
                 //CUDA_SAFE_CALL( cudaMemcpy(z_gpu, &j, sizeof(int), cudaMemcpyHostToDevice));
-                clear_cells<<<dimGrid, dimBlock_clear>>>(cube_gpu);
-                CUT_CHECK_ERROR("Clearing failed\n");
-                CUDA_SAFE_CALL( cudaThreadSynchronize() );                
+        clear_cells<<<dimGrid, dimBlock_clear>>>(cube_gpu);
+        CUT_CHECK_ERROR("Clearing failed\n");
+        CUDA_SAFE_CALL( cudaThreadSynchronize() );                
         //}
 
     #ifdef _SPEED_TEST
@@ -434,11 +435,11 @@ int main(int argc, char **argv){
 
         if (i % params.count_every == 0)
         {
-        *part_cnt = 0;
-        CUDA_SAFE_CALL( cudaMemcpy(part_cnt_gpu, part_cnt, sizeof(int), cudaMemcpyHostToDevice));
+            *part_cnt = 0;
+            CUDA_SAFE_CALL( cudaMemcpy(part_cnt_gpu, part_cnt, sizeof(int), cudaMemcpyHostToDevice));
 
         #ifdef _DEBUG
-        CUDA_SAFE_CALL( cudaMemcpy(debug_gpu, dbg_cpu, 512 * sizeof(int), cudaMemcpyHostToDevice));
+            CUDA_SAFE_CALL( cudaMemcpy(debug_gpu, dbg_cpu, 512 * sizeof(int), cudaMemcpyHostToDevice));
         #endif
 
         #ifdef _SPEED_TEST
@@ -446,21 +447,21 @@ int main(int argc, char **argv){
         #endif
 
             for (j = 0; j < grid_dim; j++)
-                {
-                    CUDA_SAFE_CALL( cudaMemset(sum_gpu, 0, 512*sizeof(*sum_gpu)) );
-                    CUDA_SAFE_CALL( cudaThreadSynchronize() );
+            {
+                CUDA_SAFE_CALL( cudaMemset(sum_gpu, 0, 512*sizeof(*sum_gpu)) );
+                CUDA_SAFE_CALL( cudaThreadSynchronize() );
 
-                    CUDA_SAFE_CALL( cudaMemcpy(z_gpu, &j, sizeof(int), cudaMemcpyHostToDevice));
-        #ifdef _DEBUG
-                    count_cells<<<dimGrid, dimBlock>>>(sum_gpu, cube_gpu, z_gpu, thickness, debug_gpu);
-        #else
-                    count_cells<<<dimGrid, dimBlock>>>(sum_gpu, cube_gpu, z_gpu, thickness);
-        #endif
-                    CUDA_SAFE_CALL( cudaThreadSynchronize() );
+                CUDA_SAFE_CALL( cudaMemcpy(z_gpu, &j, sizeof(int), cudaMemcpyHostToDevice));
+            #ifdef _DEBUG
+                count_cells<<<dimGrid, dimBlock>>>(sum_gpu, cube_gpu, z_gpu, thickness, debug_gpu);
+            #else
+                count_cells<<<dimGrid, dimBlock>>>(sum_gpu, cube_gpu, z_gpu, thickness);
+            #endif
+                CUDA_SAFE_CALL( cudaThreadSynchronize() );
 
-                    sum_array<<<1, 1>>>(sum_gpu, part_cnt_gpu, 512);
-                    CUT_CHECK_ERROR("Counting execution failed\n");
-                    CUDA_SAFE_CALL( cudaThreadSynchronize() );
+                sum_array<<<1, 1>>>(sum_gpu, part_cnt_gpu, 512);
+                CUT_CHECK_ERROR("Counting execution failed\n");
+                CUDA_SAFE_CALL( cudaThreadSynchronize() );
             }
 
         #ifdef _SPEED_TEST
@@ -470,20 +471,20 @@ int main(int argc, char **argv){
         #endif
 
         #ifdef _DEBUG
-                CUDA_SAFE_CALL( cudaMemcpy(dbg_cpu, debug_gpu, 512 * sizeof(int), cudaMemcpyDeviceToHost));
+            CUDA_SAFE_CALL( cudaMemcpy(dbg_cpu, debug_gpu, 512 * sizeof(int), cudaMemcpyDeviceToHost));
         //for (j = 0; j < 512; j++)
         //    if (dbg_cpu[j] != 33*33*33)
         //        printf("%i: %i\n", j, dbg_cpu[j]);
-        dbg_sum = 0;
-        for (j = 0; j < 512; j++) 
-        {    
-            dbg_sum += dbg_cpu[j];
-            dbg_cpu[j] = 0;
-        }
-        printf("Total sum: %i\n", dbg_sum);
+            dbg_sum = 0;
+            for (j = 0; j < 512; j++) 
+            {    
+                dbg_sum += dbg_cpu[j];
+                dbg_cpu[j] = 0;
+            }
+            printf("Total sum: %i\n", dbg_sum);
         #endif
 
-                CUDA_SAFE_CALL( cudaMemcpy(part_cnt, part_cnt_gpu, sizeof(int), cudaMemcpyDeviceToHost));
+            CUDA_SAFE_CALL( cudaMemcpy(part_cnt, part_cnt_gpu, sizeof(int), cudaMemcpyDeviceToHost));
             myPrint((s=itoa((*part_cnt))), params.print_to);
             free(s);
             printf("%i cells\n", *part_cnt);
@@ -491,15 +492,15 @@ int main(int argc, char **argv){
         }
         if (i % params.dump_every == 0)
         {
-        CUDA_SAFE_CALL( cudaMemcpy(cube, cube_gpu, all_cells * sizeof(char), cudaMemcpyDeviceToHost));
-        dump_cube(cube, cells, params.dump_to);
+            CUDA_SAFE_CALL( cudaMemcpy(cube, cube_gpu, all_cells * sizeof(char), cudaMemcpyDeviceToHost));
+            dump_cube(cube, cells, params.dump_to);
         }
         printf("%i-th iteration end\n", i);
     }
-        CUDA_SAFE_CALL( cudaThreadSynchronize() );
-        CUT_SAFE_CALL( cutStopTimer(hSumTimer) );
-        //CUDA_SAFE_CALL( cudaMemcpy(cube_fin, cube_gpu, 529*529*529 * sizeof(unsigned char), cudaMemcpyDeviceToHost) );
-        gpuTime = cutGetTimerValue(hSumTimer);
+    CUDA_SAFE_CALL( cudaThreadSynchronize() );
+    CUT_SAFE_CALL( cutStopTimer(hSumTimer) );
+    //CUDA_SAFE_CALL( cudaMemcpy(cube_fin, cube_gpu, 529*529*529 * sizeof(unsigned char), cudaMemcpyDeviceToHost) );
+    gpuTime = cutGetTimerValue(hSumTimer);
     printf("Iteration time  : %f \n", (double)gpuTime/i);
 
     myPrint("exiting", params.print_to);
@@ -509,10 +510,10 @@ int main(int argc, char **argv){
     CUDA_SAFE_CALL( cudaFree(cube_gpu) );
     CUDA_SAFE_CALL( cudaFree(sum_gpu) );
     CUDA_SAFE_CALL( cudaFree(z_gpu) );
-    #ifdef _DEBUG
-        CUDA_SAFE_CALL( cudaFree(debug_gpu) );
+#ifdef _DEBUG
+    CUDA_SAFE_CALL( cudaFree(debug_gpu) );
     free(dbg_cpu);
-    #endif
+#endif
 //        free(h_RandGPU);
 //        free(h_RandCPU);
     free(part_cnt);
