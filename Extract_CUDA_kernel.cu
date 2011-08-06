@@ -144,10 +144,10 @@ __global__ void clear_top(char * cube)
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
     const int j =  (blockIdx.y * blockDim.y + threadIdx.y)*2;
 
-    cube[TO_COODRS(i, j , 0)] = 0;
-    cube[TO_COODRS(i+1, j , 0)] = 0;
-    cube[TO_COODRS(i, j+1, 0)] = 0;
-    cube[TO_COODRS(i+1, j+1 , 0)] = 0;
+    cube[TO_COODRS(i, j , 0)] = 1;
+    cube[TO_COODRS(i+1, j , 0)] = 1;
+    cube[TO_COODRS(i, j+1, 0)] = 1;
+    cube[TO_COODRS(i+1, j+1 , 0)] = 1;
 }
 
 __global__ void clear_floor(char * cube)
