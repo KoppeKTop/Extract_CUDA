@@ -81,11 +81,9 @@ extern "C" int getCube(char * cube, unsigned int &drug, t_params * params)
 	char ch;
 	ifstream fin(params->cube_filename);
 	int i = 0;
-	int cells = params->cells;
-	int all_cells = cells*cells*cells;
-	int map[10];
+	dim3 vol_dim = params->vol_dim;
+	int all_cells = vol_dim.x*vol_dim.y*vol_dim.z;
 	//cube = new char[all_cells];
-	for(i=0; i<10; i++) map[i] = 0;
 	if (fin)
 	{
 		i = 0;
@@ -116,16 +114,13 @@ extern "C" int getCube(char * cube, unsigned int &drug, t_params * params)
 		i = 0;
 		while(fin.get(ch))
 		{
-			cube[i] = (unsigned char)(ch - '0');
-			map[(int)(ch - '0')] += 1;
+			cube[i] = ch;
 			i++;
 		}
 		printf("\n");
 	}
 	fin.close();
 	printf("Cube loaded!\n");
-	for (i=0; i<10; i++) printf("%i: %i\n", i, map[i]);
-        drug = map[1];
 	return 0;
 }
 
@@ -148,7 +143,10 @@ extern "C" int getParams(t_params * params, char * filename)
     
     params->stop_part = iniparser_getdouble(ini, "GENERAL:stop_part", 0);
     params->max_iter = iniparser_getint(ini, "GENERAL:max_iter", 0);
-    params->cells = iniparser_getint(ini, "GENERAL:cells", 0);
+    char * vol_dim_str = iniparser_getstring(ini, "GENERAL:vol_dim", "");
+    sprintf(vol_dim_str, "%d,%d,%d", &(params->vol_dim.x), &(params->vol_dim.y), &(params->vol_dim.y));
+    delete [] vol_dim_str;
+    printf("Vol dim: (%d, %d, %d)\n", params->vol_dim.x, params->vol_dim.y, params->vol_dim.z);
 
     char * dump_from = iniparser_getstring(ini, "GENERAL:dump_from", NULL);
     if (dump_from != NULL && strlen(dump_from) <= 255) {
@@ -196,9 +194,9 @@ extern "C" int getParams(t_params * params, char * filename)
     params->thickness = iniparser_getint(ini, "GENERAL:thickness", 0);
     params->count_every = iniparser_getint(ini, "GENERAL:count_every", 0);
 
+    iniparser_freedict(ini);
     if (params->stop_part && params->max_iter && params->cells && params->thickness && params->count_every)
     {
-        iniparser_freedict(ini);
         printf("Ini readed\n");
         return 0;
     }
@@ -206,16 +204,16 @@ extern "C" int getParams(t_params * params, char * filename)
     return 1;
 }
 
-extern "C" void dump_cube(char *cube, int dim, char *fname)
+extern "C" void dump_cube(char *cube, dim3 dim, char *fname)
 {
     printf("Dumping... ");
     FILE *fd = fopen(fname, "w");
-    fwrite(cube, 1, sizeof(char)*dim*dim*dim, fd);
+    fwrite(cube, 1, sizeof(char)*dim.x*dim.y*dim.z, fd);
     fclose(fd);
     printf("Done\n");
 }
 
-extern "C" int load_dump(char *cube, int dim, char *fname)
+extern "C" int load_dump(char *cube, dim3 dim, char *fname)
 {
     printf("Loading... ");
     FILE *fd = fopen(fname, "r");
@@ -223,8 +221,8 @@ extern "C" int load_dump(char *cube, int dim, char *fname)
         fprintf(stderr, "cannot open file: %s\n", fname);
         return 0;
     }
-    int res = fread(cube, 1, sizeof(char)*dim*dim*dim, fd);
-    if (res != dim*dim*dim) {
+    int res = fread(cube, 1, sizeof(char)*dim.x*dim.y*dim.z, fd);
+    if (res != dim.x*dim.y*dim.z) {
         fprintf(stderr, "cannot load dump from file: %s\n", fname);
         fclose(fd);
         return 0;

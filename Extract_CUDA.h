@@ -3,11 +3,13 @@
 #ifndef extract_cuda_h
 #define extract_cuda_h
 
+#include <cuda.h>
+
 typedef struct
 {
     double stop_part;
     unsigned int max_iter;
-    unsigned int cells;
+    dim3 vol_dim;
     unsigned int thickness;
     char * cube_filename;
     char * dump_to;

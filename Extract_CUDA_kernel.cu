@@ -50,31 +50,35 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
     int rotate_axis, rotate_angle;
     int index;
 
-    const int cells = 2 * blockDim.x * gridDim.x+1;
-    const int cube_cells = blockDim.x * gridDim.x;
-
     i =  (blockIdx.x * blockDim.x + threadIdx.x);
     j =  (blockIdx.y * blockDim.y + threadIdx.y);
     k = (blockIdz * blockDim.z + threadIdx.z);
+
+    if ( (i*2+odd+1) >= ca_dim.x ||  (j*2+odd+1) >= ca_dim.y || (k*2+odd+1) >= ca_dim.z))
+    {
+        return;
+    }
     
-    curandState local_rnd_state = rands[TO_CUBE_COODRS(i,j,k)];
+    int cube_idx = i + j * (ca_dim.x/2) + k * (ca_dim.x/2) * (ca_dim.y/2);
+    curandState local_rnd_state = rands[cube_idx];
     
     rotate_angle = (int)(curand_uniform(&local_rnd_state) * 3);
     if ( rotate_angle >= 2 ) // choose not to rotate
-            return;
+        return;
     rotate_axis = (int)(curand_uniform(&local_rnd_state) * 3);
+    rands[cube_idx] = local_rnd_state;
     if (rotate_axis == 3)   rotate_axis = 2; // uniform distribution includes 1.0, so...
     i = i*2 + odd;
     j = j*2 + odd;
     k = k*2 + odd;
-    #ifdef _DEBUG
-    const int all_cells = cells*cells*cells;
+#ifdef _DEBUG
+    const int all_cells = ca_dim.x*ca_dim.y*ca_dim.z;
     if (TO_COODRS(i+1,j+1,k+1) > all_cells) 
     {
       atomicAdd(dbg, 1);
       return;
     }
-    #endif
+#endif
 
     coords[0] = TO_COODRS(i,j,k);                
     coords[1] = TO_COODRS(i+1,j,k);
@@ -101,9 +105,8 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
     RETURN_CUBE_TO_MEM(7)
 }
 
-__global__ void clear_cells(char * cube, dim3 ca_dim, dim3 ca_dim)
+__global__ void clear_cells(char * cube, dim3 ca_dim)
 {
-    const int cells = 2 * blockDim.x * gridDim.x+1;
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
     const int j =  (blockIdx.y * blockDim.y + threadIdx.y)*2;
     
@@ -138,7 +141,6 @@ __global__ void clear_cells(char * cube, dim3 ca_dim, dim3 ca_dim)
 
 __global__ void clear_top(char * cube, dim3 ca_dim)
 {
-    const int cells = 2 * blockDim.x * gridDim.x+1;
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
     const int j =  (blockIdx.y * blockDim.y + threadIdx.y)*2;
 
@@ -150,7 +152,6 @@ __global__ void clear_top(char * cube, dim3 ca_dim)
 
 __global__ void clear_floor(char * cube, dim3 ca_dim)
 {
-    const int cells = 2 * blockDim.x * gridDim.x+1;
     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
     const int j =  (blockIdx.y * blockDim.y + threadIdx.y)*2;
 
@@ -165,36 +166,36 @@ __global__ void clear_floor(char * cube, dim3 ca_dim)
 }
 
 
-__global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int * blockIdz, const unsigned int thick, 
-const unsigned int height, dim3 ca_dim
-#ifdef _DEBUG
-, unsigned int * debug_sum
-#endif
-)
-{
-    const int cells = 2 * blockDim.x * gridDim.x+1;
-    const unsigned int thickness = thick;
-    const unsigned int h = height;
-    const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
-    const int j =  (blockIdx.y * blockDim.y + threadIdx.y)*2;
-    const int k = ((*blockIdz) * blockDim.z + threadIdx.z)*2;
-    const int thd = threadIdx.x + threadIdx.y * blockDim.x + threadIdx.z * blockDim.y * blockDim.x;
+// __global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int * blockIdz, const unsigned int thick, 
+// const unsigned int height, dim3 ca_dim
+// #ifdef _DEBUG
+// , unsigned int * debug_sum
+// #endif
+// )
+// {
+//     const int cells = 2 * blockDim.x * gridDim.x+1;
+//     const unsigned int thickness = thick;
+//     const unsigned int h = height;
+//     const int i =  (blockIdx.x * blockDim.x + threadIdx.x)*2;
+//     const int j =  (blockIdx.y * blockDim.y + threadIdx.y)*2;
+//     const int k = ((*blockIdz) * blockDim.z + threadIdx.z)*2;
+//     const int thd = threadIdx.x + threadIdx.y * blockDim.x + threadIdx.z * blockDim.y * blockDim.x;
 
-    if ((i < THICKNESS-1) or (j < THICKNESS-1) or (h + k < THICKNESS - 1)) return;
-    if ((i > cells - THICKNESS - 2) or (j > cells - THICKNESS - 2) or (h + k > cells - THICKNESS - 2)) return;
+//     if ((i < THICKNESS-1) or (j < THICKNESS-1) or (h + k < THICKNESS - 1)) return;
+//     if ((i > cells - THICKNESS - 2) or (j > cells - THICKNESS - 2) or (h + k > cells - THICKNESS - 2)) return;
 
-    unsigned int cnt = 0;
+//     unsigned int cnt = 0;
 
-    if (cube[TO_COODRS(i, j, k)] == 1) cnt++;
-    if (cube[TO_COODRS(i+1, j, k)] == 1) cnt++;
-    if (cube[TO_COODRS(i, j+1, k)] == 1) cnt++;
-    if (cube[TO_COODRS(i+1, j+1, k)] == 1) cnt++;
-    if (cube[TO_COODRS(i, j, k+1)] == 1) cnt++;
-    if (cube[TO_COODRS(i+1, j, k+1)] == 1) cnt++;
-    if (cube[TO_COODRS(i, j+1, k+1)] == 1) cnt++;
-    if (cube[TO_COODRS(i+1, j+1, k+1)] == 1) cnt++;
+//     if (cube[TO_COODRS(i, j, k)] == 1) cnt++;
+//     if (cube[TO_COODRS(i+1, j, k)] == 1) cnt++;
+//     if (cube[TO_COODRS(i, j+1, k)] == 1) cnt++;
+//     if (cube[TO_COODRS(i+1, j+1, k)] == 1) cnt++;
+//     if (cube[TO_COODRS(i, j, k+1)] == 1) cnt++;
+//     if (cube[TO_COODRS(i+1, j, k+1)] == 1) cnt++;
+//     if (cube[TO_COODRS(i, j+1, k+1)] == 1) cnt++;
+//     if (cube[TO_COODRS(i+1, j+1, k+1)] == 1) cnt++;
 
-    atomicAdd(&(part_cnt[thd]), cnt);
+//     atomicAdd(&(part_cnt[thd]), cnt);
 
 /*    cnt_sh[thd] = cnt;
     __syncthreads();
@@ -212,17 +213,17 @@ const unsigned int height, dim3 ca_dim
         part_cnt[blockIdx.x + blockIdx.y * gridDim.x] = res;
     }
 */
-#ifdef _DEBUG
-    atomicAdd(&(debug_sum[thd]), cnt);
-#endif
+// #ifdef _DEBUG
+//     atomicAdd(&(debug_sum[thd]), cnt);
+// #endif
 
-}
+// }
 
-__global__ void sum_array(unsigned int * d_array, unsigned int *d_sum, int cnt)
-{
-    int res = 0;
-    for (int i = 0; i < cnt; i++)
-        res += d_array[i];
-    d_sum[0] += res;
-}
+// __global__ void sum_array(unsigned int * d_array, unsigned int *d_sum, int cnt)
+// {
+//     int res = 0;
+//     for (int i = 0; i < cnt; i++)
+//         res += d_array[i];
+//     d_sum[0] += res;
+// }
 

@@ -14,13 +14,13 @@ __global__ void clear_cells(char * cube, dim3 ca_dim);
 __global__ void clear_top(char * cube, dim3 ca_dim);
 __global__ void clear_floor(char * cube, dim3 ca_dim);
 
-__global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int * blockIdz, const unsigned int thick, 
-const unsigned int height, dim3 ca_dim
-#ifdef _DEBUG
-, unsigned int * debug_sum
-#endif
-);
+// __global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int blockIdz, const unsigned int thick, 
+// const unsigned int height, dim3 ca_dim
+// #ifdef _DEBUG
+// , unsigned int * debug_sum
+// #endif
+// );
 
-__global__ void sum_array(unsigned int * d_array, unsigned int *d_sum, int cnt);
+// __global__ void sum_array(unsigned int * d_array, unsigned int *d_sum, int cnt);
 
 #endif
