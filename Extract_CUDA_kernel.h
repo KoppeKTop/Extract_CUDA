@@ -14,6 +14,8 @@ __global__ void clear_cells(char * cube, dim3 ca_dim);
 __global__ void clear_top(char * cube, dim3 ca_dim);
 __global__ void clear_floor(char * cube, dim3 ca_dim);
 
+__global__ void init_rnd(curandState * state, int randCnt, unsigned int randSeed);
+
 // __global__ void count_cells(unsigned int * part_cnt, char * cube, unsigned int blockIdz, const unsigned int thick, 
 // const unsigned int height, dim3 ca_dim
 // #ifdef _DEBUG

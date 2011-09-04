@@ -40,8 +40,6 @@ CUFILES_sm_13		:= Extract_CUDA.cu
 # CUDA dependency files
 CU_DEPS		:= \
 	dci.h \
-	MersenneTwister.h \
-	MersenneTwister_kernel.cu \
 	Extract_CUDA_kernel.cu
 
 # C/C++ source files (compiled with gcc / c++)

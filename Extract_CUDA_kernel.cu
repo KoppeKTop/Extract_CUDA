@@ -43,20 +43,27 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
 )
 {
     int i, j, k;
+    int i1, j1; // coordinates of diagonal cell in block, (k1 == k + 1 - there is no toroid in that direction)
     char rotate_element[8];
     int coords[8];
     char cube_element1;
     char cube_element2;
     int rotate_axis, rotate_angle;
     int index;
+    short onBoarder = 0;
 
     i =  (blockIdx.x * blockDim.x + threadIdx.x);
     j =  (blockIdx.y * blockDim.y + threadIdx.y);
     k = (blockIdz * blockDim.z + threadIdx.z);
 
-    if ( (i*2+odd+1) >= ca_dim.x ||  (j*2+odd+1) >= ca_dim.y || (k*2+odd+1) >= ca_dim.z))
+    if ( (i*2+odd) >= ca_dim.x ||  (j*2+odd) >= ca_dim.y || (k*2+odd+1) >= ca_dim.z))
     {
         return;
+    }
+
+    if ( (i*2+odd) == ca_dim.x ||  (j*2+odd) == ca_dim.y)
+    {
+        onBoarder = 1;
     }
     
     int cube_idx = i + j * (ca_dim.x/2) + k * (ca_dim.x/2) * (ca_dim.y/2);
@@ -71,6 +78,8 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
     i = i*2 + odd;
     j = j*2 + odd;
     k = k*2 + odd;
+    i1 = (i+1 == ca_dim.x)? 0: i+1;
+    j1 = (j+1 == ca_dim.y)? 0: j+1;
 #ifdef _DEBUG
     const int all_cells = ca_dim.x*ca_dim.y*ca_dim.z;
     if (TO_COODRS(i+1,j+1,k+1) > all_cells) 
@@ -79,15 +88,14 @@ __global__ void ca_step(char * cube, int odd, curandState * rands, unsigned int 
       return;
     }
 #endif
-
-    coords[0] = TO_COODRS(i,j,k);                
-    coords[1] = TO_COODRS(i+1,j,k);
-    coords[2] = TO_COODRS(i,j+1,k);
-    coords[3] = TO_COODRS(i+1,j+1,k);
+    coords[0] = TO_COODRS(i,j,k);
+    coords[1] = TO_COODRS(i1,j,k);
+    coords[2] = TO_COODRS(i,j1,k);
+    coords[3] = TO_COODRS(i1,j1,k);
     coords[4] = TO_COODRS(i,j,k+1);
-    coords[5] = TO_COODRS(i+1,j,k+1);
-    coords[6] = TO_COODRS(i,j+1,k+1);
-    coords[7] = TO_COODRS(i+1,j+1,k+1);
+    coords[5] = TO_COODRS(i1,j,k+1);
+    coords[6] = TO_COODRS(i,j1,k+1);
+    coords[7] = TO_COODRS(i1,j1,k+1);
 
     ROTATE_CYCLE_2(0)
     ROTATE_CYCLE_2(2)
@@ -163,6 +171,16 @@ __global__ void clear_floor(char * cube, dim3 ca_dim)
     cube[TO_COODRS(i+1, j , CELLS - 1)] = 0;
     cube[TO_COODRS(i, j+1, CELLS - 1)] = 0;
     cube[TO_COODRS(i+1, j+1 , CELLS - 1)] = 0;
+}
+
+__global__ void init_rnd(curandState * state, int randCnt, unsigned int randSeed)
+{
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    while (idx < randCnt)
+    {
+        curand_init(randSeed, idx, 0, state + idx);
+        idx += gridDim.x * blockDim.x;
+    }
 }
 
 
